@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,6 +15,9 @@ typedef struct dir {
     char** files;
     struct dir** dirs;
 
+    size_t size; /* directory contents size in bytes */
+
+    // internal trackers
     size_t f_size;
     size_t d_size;
     size_t f_count;
@@ -24,21 +28,8 @@ char* normalize_path(char* path);
 Dir* traverse_tree(char* path);
 Dir* create_dir(char* path);
 void free_dir(Dir* dir);
-
-void debug(Dir* root) {
-    if (root == NULL) return;
-
-    printf("path: '%s'\n", root->path);
-
-    for (int i = 0; root->files[i] != NULL; i++) {
-        printf("%s ", root->files[i]);
-    }
-    printf("\n---\n");
-
-    for (int i = 0; root->dirs[i] != NULL; i++) {
-        debug(root->dirs[i]);
-    }
-}
+void calc_size(Dir* root);
+void print_info(Dir* root);
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -49,11 +40,45 @@ int main(int argc, char *argv[]) {
     char* path = argv[1];
     path = normalize_path(path);
     Dir* root = traverse_tree(path);
+    calc_size(root);
+    print_info(root);
 
-    debug(root);
     free_dir(root);
 
     return 0;
+}
+
+const char* units[] = {"KiB", "MiB", "GiB", "TiB"};
+
+void print_info(Dir* root) {
+    if (root == NULL) return;
+
+    int level = 0;
+    size_t size = root->size;
+    while (size >= 1024) {
+        size = size / 1024;
+        level++;
+    }
+
+    if (level > 4) {
+        fprintf(stderr, "Add more units...\n");
+        free_dir(root);
+        exit(2);
+    }
+
+    char str_size[20];
+    if (level == 0) {
+        const int size_in_unit = (int) size;
+        snprintf(str_size, 20, "%d B", size_in_unit);
+    } else {
+        const double size_in_unit = (double) root->size / pow(1024, level);
+        snprintf(str_size, 20, "%.2f %s", size_in_unit, units[level- 1]);
+    }
+
+    printf("%s - %s\n", root->path, str_size);
+    for (int i = 0; root->dirs[i] != NULL; i++) {
+        print_info(root->dirs[i]);
+    }
 }
 
 #ifdef _WIN32
@@ -115,6 +140,7 @@ Dir* create_dir(char* path) {
         exit(1);
     }
 
+    dir->size = 0;
     dir->f_count = 0;
     dir->d_count = 0;
 
@@ -208,3 +234,32 @@ Dir* traverse_tree(char* path) {
 }
 #endif
 
+#ifdef _WIN32
+void calc_size(Dir* root) {
+    if (root == NULL) return;
+
+    for (int i = 0; root->files[i] != NULL; i++) {
+        /* TODO */
+    }
+
+    for (int i = 0; root->dirs[i] != NULL; i++) {
+        calc_size(root->dirs[i]);
+    }
+}
+#else
+void calc_size(Dir* root) {
+    if (root == NULL) return;
+
+    struct stat st;
+    for (int i = 0; root->files[i] != NULL; i++) {
+        if (stat(root->files[i], &st) == 0) {
+            root->size += st.st_size;
+        }
+    }
+
+    for (int i = 0; root->dirs[i] != NULL; i++) {
+        calc_size(root->dirs[i]);
+        root->size += root->dirs[i]->size;
+    }
+}
+#endif

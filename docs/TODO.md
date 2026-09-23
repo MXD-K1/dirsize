@@ -7,10 +7,10 @@
 - [x] Define command-line interface (basic)
 - [x] Implement path handling (basic)
 - [x] Implement directory traversal
-- [ ] Read file metadata
-- [ ] Calculate file sizes
-- [ ] Calculate directory totals
-- [ ] Add basic output
+- [x] Read file metadata
+- [x] Calculate file sizes
+- [x] Calculate directory totals
+- [x] Add basic output
 
 **Week 1 milestone:** `dirsize <path>` works reliably on normal directories.
 
