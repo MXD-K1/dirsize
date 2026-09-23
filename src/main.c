@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -22,8 +23,8 @@ typedef struct dir {
     struct dir** dirs; /* Array of directories inside the directory. */
 
     // dir data
-    int is_hidden;     /* Is the directory hidden? */
-    int is_system;     /* Is this a system directory? */
+    bool is_hidden;     /* Is the directory hidden? */
+    bool is_system;     /* Is this a system directory? */
 
     size_t size;       /* directory contents size in bytes. */
 
@@ -173,8 +174,8 @@ Dir* create_dir(char* path) {
     dir->f_count = 0;
     dir->d_count = 0;
 
-    dir->is_hidden = 0;
-    dir->is_system = 0;
+    dir->is_hidden = false;
+    dir->is_system = false;
 
     return dir;
 }
@@ -252,8 +253,8 @@ Dir* traverse_tree(char* path) {
 
         if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             Dir* child = traverse_tree(new_path);
-            if (data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) child->is_hidden = 1;
-            if (data.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) child->is_system = 1;
+            if (data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) child->is_hidden = true;
+            if (data.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) child->is_system = true;
             append_dir(root, child);
         } else {
             append_filename(root, new_path);
@@ -296,7 +297,7 @@ Dir* traverse_tree(char* path) {
         if (stat(new_path, &path_stat) == 0) {
             if (S_ISDIR(path_stat.st_mode)) {
                 Dir* child = traverse_tree(new_path);
-                if (dirent->d_name[0] == '.') child->is_hidden = 1;
+                if (dirent->d_name[0] == '.') child->is_hidden = true;
                 append_dir(root, child);
             } else if (S_ISREG(path_stat.st_mode)) {
                 append_filename(root, new_path);
