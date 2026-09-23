@@ -19,7 +19,7 @@
 - [x] Add human-readable sizes
 - [ ] Add depth limiting
 - [ ] Add sorting by size
-- [ ] Decide hidden-file behavior
+- [x] Decide hidden-file behavior
 - [ ] Add graceful permission/error handling
 - [ ] Handle unusual filesystem entries
 - [ ] Add unit tests

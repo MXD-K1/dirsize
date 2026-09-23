@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -10,12 +11,21 @@
 #include <sys/stat.h>
 #endif
 
+uint8_t flags = 0x00;
+
+#define SI_MODE     0x01
+#define SHOW_HIDDEN 0x02
+
 typedef struct dir {
     char* path;
-    char** files;
-    struct dir** dirs;
+    char** files;      /* Array of files inside the directory. */
+    struct dir** dirs; /* Array of directories inside the directory. */
 
-    size_t size; /* directory contents size in bytes */
+    // dir data
+    int is_hidden;     /* Is the directory hidden? */
+    int is_system;     /* Is this a system directory? */
+
+    size_t size;       /* directory contents size in bytes. */
 
     // internal trackers
     size_t f_size;
@@ -23,8 +33,6 @@ typedef struct dir {
     size_t f_count;
     size_t d_count;
 } Dir;
-
-int si_mode = 0;
 
 char* normalize_path(char* path);
 Dir* traverse_tree(char* path);
@@ -34,13 +42,16 @@ void calc_size(Dir* root);
 void print_info(Dir* root);
 
 int main(int argc, char *argv[]) {
-    if (argc == 3) {
-        if (strcmp(argv[2], "--si") == 0) {
-            si_mode = 1;
-        }
-        else {
-            fprintf(stderr, "Unrecognized option: %s\n", argv[2]);
-            return 1;
+    if (argc > 2) {
+        for (int i= 0; i < argc; i++) {
+            if (strcmp(argv[2], "--si") == 0) {
+                flags &= SI_MODE;
+            } else if (strcmp(argv[2], "--include-hidden") == 0) {
+                flags &= SHOW_HIDDEN;
+            } else {
+                fprintf(stderr, "Unrecognized option: %s\n", argv[2]);
+                return 1;
+            }
         }
     }
     else if (argc != 2) {
@@ -50,6 +61,7 @@ int main(int argc, char *argv[]) {
 
     char* path = argv[1];
     path = normalize_path(path);
+
     Dir* root = traverse_tree(path);
     calc_size(root);
     print_info(root);
@@ -64,8 +76,9 @@ const char* units_1000[] = {"KB", "MB", "GB", "TB"};
 
 void print_info(Dir* root) {
     if (root == NULL) return;
+    if (flags & SHOW_HIDDEN && (root->is_hidden || root->is_system)) return;
 
-    const int unit_size = si_mode ? 1000: 1024;
+    const int unit_size = flags & SI_MODE ? 1000: 1024;
 
     int level = 0;
     size_t size = root->size;
@@ -85,7 +98,7 @@ void print_info(Dir* root) {
         const int size_in_unit = (int) size;
         snprintf(str_size, 20, "%d B", size_in_unit);
     } else {
-        const char* unit = si_mode ? units_1000[level - 1] : units_1024[level - 1];
+        const char* unit = flags & SI_MODE ? units_1000[level - 1] : units_1024[level - 1];
         const double size_in_unit = (double) root->size / pow(unit_size, level);
         snprintf(str_size, 20, "%.2f %s", size_in_unit, unit);
     }
@@ -158,6 +171,9 @@ Dir* create_dir(char* path) {
     dir->size = 0;
     dir->f_count = 0;
     dir->d_count = 0;
+
+    dir->is_hidden = 0;
+    dir->is_system = 0;
 
     return dir;
 }
@@ -235,6 +251,8 @@ Dir* traverse_tree(char* path) {
 
         if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             Dir* child = traverse_tree(new_path);
+            if (data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) child->is_hidden = 1;
+            if (data.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) child->is_system = 1;
             append_dir(root, child);
         } else {
             append_filename(root, new_path);
@@ -277,6 +295,7 @@ Dir* traverse_tree(char* path) {
         if (stat(new_path, &path_stat) == 0) {
             if (S_ISDIR(path_stat.st_mode)) {
                 Dir* child = traverse_tree(new_path);
+                if (dirent->d_name[0] == '.') child->is_hidden = 1;
                 append_dir(root, child);
             } else if (S_ISREG(path_stat.st_mode)) {
                 append_filename(root, new_path);
@@ -297,10 +316,11 @@ void calc_size(Dir* root) {
 
     HANDLE handle = INVALID_HANDLE_VALUE;
     for (int i = 0; root->files[i] != NULL; i++) {
+        // get a handle to that file
         handle = CreateFile(
         TEXT(root->files[i]), GENERIC_READ, FILE_SHARE_READ, NULL,
         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL
-        ); // get a handle to that file
+        );
 
         root->size += (size_t) GetFileSize(handle, NULL);
     }
