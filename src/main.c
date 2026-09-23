@@ -43,13 +43,14 @@ void print_info(Dir* root);
 
 int main(int argc, char *argv[]) {
     if (argc > 2) {
-        for (int i= 0; i < argc; i++) {
-            if (strcmp(argv[2], "--si") == 0) {
+        for (int i = 2; i < argc; i++) {
+            printf("%s\n", argv[i]);
+            if (strcmp(argv[i], "--si") == 0) {
                 flags |= SI_MODE;
-            } else if (strcmp(argv[2], "--include-hidden") == 0) {
+            } else if (strcmp(argv[i], "--include-hidden") == 0) {
                 flags |= SHOW_HIDDEN;
             } else {
-                fprintf(stderr, "Unrecognized option: %s\n", argv[2]);
+                fprintf(stderr, "Unrecognized option: %s\n", argv[i]);
                 return 1;
             }
         }
@@ -76,7 +77,7 @@ const char* units_1000[] = {"KB", "MB", "GB", "TB"};
 
 void print_info(Dir* root) {
     if (root == NULL) return;
-    if (flags & SHOW_HIDDEN && (root->is_hidden || root->is_system)) return;
+    if (!(flags & SHOW_HIDDEN) && (root->is_hidden || root->is_system)) return;
 
     const int unit_size = flags & SI_MODE ? 1000: 1024;
 
