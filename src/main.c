@@ -45,9 +45,9 @@ int main(int argc, char *argv[]) {
     if (argc > 2) {
         for (int i= 0; i < argc; i++) {
             if (strcmp(argv[2], "--si") == 0) {
-                flags &= SI_MODE;
+                flags |= SI_MODE;
             } else if (strcmp(argv[2], "--include-hidden") == 0) {
-                flags &= SHOW_HIDDEN;
+                flags |= SHOW_HIDDEN;
             } else {
                 fprintf(stderr, "Unrecognized option: %s\n", argv[2]);
                 return 1;
