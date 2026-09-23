@@ -2,11 +2,11 @@
 
 ## Week 1 — Core functionality
 
-- [ ] Decide project structure
-- [ ] Set up C17 build
-- [ ] Define command-line interface
-- [ ] Implement path handling
-- [ ] Implement directory traversal
+- [x] Decide project structure
+- [x] Set up C17 build
+- [x] Define command-line interface (basic)
+- [x] Implement path handling (basic)
+- [x] Implement directory traversal
 - [ ] Read file metadata
 - [ ] Calculate file sizes
 - [ ] Calculate directory totals

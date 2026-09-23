@@ -1,27 +1,13 @@
 # Build output
 build/
-out/
-bin/
 
-# C/C++ build artifacts
+# C build artifacts
 *.o
-*.obj
 *.a
-*.lib
-*.dll
 *.exe
-
-# Debugging / profiling
-*.dSYM/
-*.gcda
-*.gcno
-*.prof
-*.profraw
-*.profdata
 
 # IDEs
 .idea/
-.vscode/
 .vs/
 
 # Compilation database
@@ -30,10 +16,6 @@ compile_commands.json
 # OS files
 .DS_Store
 Thumbs.db
-
-# Test artifacts
-test-results/
-coverage/
 
 # Local files
 .env
