@@ -24,6 +24,8 @@ typedef struct dir {
     size_t d_count;
 } Dir;
 
+int si_mode = 0;
+
 char* normalize_path(char* path);
 Dir* traverse_tree(char* path);
 Dir* create_dir(char* path);
@@ -32,8 +34,17 @@ void calc_size(Dir* root);
 void print_info(Dir* root);
 
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        fprintf(stderr, "Usage: ./dirsize <dir>\n");
+    if (argc == 3) {
+        if (strcmp(argv[2], "--si") == 0) {
+            si_mode = 1;
+        }
+        else {
+            fprintf(stderr, "Unrecognized option: %s\n", argv[2]);
+            return 1;
+        }
+    }
+    else if (argc != 2) {
+        fprintf(stderr, "Usage: ./dirsize <dir> [--si]\n");
         return 1;
     }
 
@@ -48,15 +59,18 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-const char* units[] = {"KiB", "MiB", "GiB", "TiB"};
+const char* units_1024[] = {"KiB", "MiB", "GiB", "TiB"};
+const char* units_1000[] = {"KB", "MB", "GB", "TB"};
 
 void print_info(Dir* root) {
     if (root == NULL) return;
 
+    const int unit_size = si_mode ? 1000: 1024;
+
     int level = 0;
     size_t size = root->size;
-    while (size >= 1024) {
-        size = size / 1024;
+    while (size >= unit_size) {
+        size = size / unit_size;
         level++;
     }
 
@@ -71,8 +85,9 @@ void print_info(Dir* root) {
         const int size_in_unit = (int) size;
         snprintf(str_size, 20, "%d B", size_in_unit);
     } else {
-        const double size_in_unit = (double) root->size / pow(1024, level);
-        snprintf(str_size, 20, "%.2f %s", size_in_unit, units[level- 1]);
+        const char* unit = si_mode ? units_1000[level - 1] : units_1024[level - 1];
+        const double size_in_unit = (double) root->size / pow(unit_size, level);
+        snprintf(str_size, 20, "%.2f %s", size_in_unit, unit);
     }
 
     printf("%s - %s\n", root->path, str_size);
