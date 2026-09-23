@@ -203,7 +203,49 @@ void append_dir(Dir* parent, Dir* child) {
 
 #ifdef _WIN32
 Dir* traverse_tree(char* path) {
+    Dir* root = create_dir(path);
 
+    char search_path[4096];
+    WIN32_FIND_DATA data;
+    HANDLE handle = INVALID_HANDLE_VALUE;
+
+    // Create the search pattern by appending \* to the directory path
+    snprintf(search_path, 4096, "%s\\*", root->path);
+    handle = FindFirstFile(search_path, &data);
+
+    if (handle == INVALID_HANDLE_VALUE) {
+        fprintf(stderr, "Couldn't open directory '%s'\n", root->path);
+        free_dir(root);
+        return NULL;
+    }
+
+    do {
+        if (strcmp(data.cFileName, ".") == 0
+            || strcmp(data.cFileName, "..") == 0) {
+            continue;
+            }
+
+        size_t len1 = strlen(root->path);
+        size_t len2 = strlen(data.cFileName);
+        char* new_path = malloc(len1 + len2 + 2);
+        strncpy(new_path, root->path, len1);
+        new_path[len1] = PATH_SEP;
+        strncpy(new_path + len1 + 1, data.cFileName, len2);
+        new_path[len1 + len2 + 1] = '\0';
+
+        if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            Dir* child = traverse_tree(new_path);
+            append_dir(root, child);
+        } else {
+            append_filename(root, new_path);
+        }
+
+    } while (FindNextFile(handle, &data));
+
+    append_filename(root, NULL);
+    append_dir(root, NULL);
+    FindClose(handle);
+    return root;
 }
 #else
 Dir* traverse_tree(char* path) {
@@ -253,12 +295,20 @@ Dir* traverse_tree(char* path) {
 void calc_size(Dir* root) {
     if (root == NULL) return;
 
+    HANDLE handle = INVALID_HANDLE_VALUE;
     for (int i = 0; root->files[i] != NULL; i++) {
-        /* TODO */
+        handle = CreateFile(
+        TEXT(root->files[i]), GENERIC_READ, FILE_SHARE_READ, NULL,
+        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL
+        ); // get a handle to that file
+
+        root->size += (size_t) GetFileSize(handle, NULL);
     }
+    CloseHandle(handle);
 
     for (int i = 0; root->dirs[i] != NULL; i++) {
         calc_size(root->dirs[i]);
+        root->size += root->dirs[i]->size;
     }
 }
 #else

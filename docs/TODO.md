@@ -16,7 +16,7 @@
 
 ## Week 2 — Reliability
 
-- [ ] Add human-readable sizes
+- [x] Add human-readable sizes
 - [ ] Add depth limiting
 - [ ] Add sorting by size
 - [ ] Decide hidden-file behavior
@@ -24,8 +24,8 @@
 - [ ] Handle unusual filesystem entries
 - [ ] Add unit tests
 - [ ] Add integration tests
-- [ ] Run AddressSanitizer
-- [ ] Run UndefinedBehaviorSanitizer
+- [x] Run AddressSanitizer
+- [x] Run UndefinedBehaviorSanitizer
 - [ ] Test large directory trees
 
 **Feature freeze:** No new major features after Week 2.
