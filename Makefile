@@ -5,11 +5,11 @@ DebugFlags := -g -fsanitize=address,undefined,leak -fno-omit-frame-pointer
 
 all: dirsize
 
-dirsize: build/release/main.o build/release/dir_utils.o
+dirsize: build/release/main.o build/release/dir_utils.o build/release/path.o
 	mkdir -p build/release
 	$(CC) $(CFlags) $^ $(LDFlags) -o build/release/$@
 
-test-dirsize: build/debug/main.o build/debug/dir_utils.o
+test-dirsize: build/debug/main.o build/debug/dir_utils.o build/debug/path.o
 	mkdir -p build/debug
 	$(CC) $(CFlags) $(DebugFlags) $^ $(LDFlags) -o build/debug/$@
 

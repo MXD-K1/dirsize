@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "dir_utils.h"
+#include "path.h"
 
 uint8_t flags = 0x00;
 int max_depth = 128;

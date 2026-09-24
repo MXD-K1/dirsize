@@ -13,23 +13,23 @@ extern int max_depth;
 
 typedef struct dir {
     char* path;
-    char** files;      /* Array of files inside the directory. */
-    struct dir** dirs; /* Array of directories inside the directory. */
 
-    // dir attributes
-    bool is_hidden;     /* Is the directory hidden? */
-    bool is_system;     /* Is this a system directory? */
+    char** files;          /* Array of files inside the directory. */
+    size_t file_count;     /* Internal tracker. */
+    size_t file_capacity;  /* Internal tracker. */
 
-    size_t size;       /* directory contents size in bytes. */
+    struct dir** dirs;     /* Array of directories inside the directory. */
+    size_t dir_count;      /* Internal tracker. */
+    size_t dir_capacity;   /* Internal tracker. */
 
-    // internal trackers
-    size_t f_size;
-    size_t d_size;
-    size_t f_count;
-    size_t d_count;
+
+    /* Directory attributes: */
+    bool is_hidden;        /* Is the directory hidden? */
+    bool is_system;        /* Is this a system directory? */
+
+    size_t size;           /* directory contents size in bytes. */
 } Dir;
 
-char* normalize_path(char* path);
 Dir* create_dir(char* path);
 void free_dir(Dir* dir);
 Dir* traverse_tree(char* path);

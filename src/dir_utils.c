@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "path.h"
+
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -12,33 +14,6 @@
 
 
 #include "dir_utils.h"
-
-#ifdef _WIN32
-char PATH_SEP = '\\';
-#else
-char PATH_SEP = '/';
-#endif
-
-
-char* normalize_path(char* path) {
-    int len = (int) strlen(path);
-    char* new_path = malloc(len + 1);
-    if (new_path == NULL) {
-        exit(1);
-    }
-
-
-    for (int i = 0; i < len; i++) {
-        if (path[i] == '\\' || path[i] == '/') {
-            new_path[i] = PATH_SEP;
-        } else {
-            new_path[i] = path[i];
-        }
-    }
-    new_path[len] = '\0';
-
-    return new_path;
-}
 
 Dir* create_dir(char* path) {
     Dir* dir = malloc(sizeof(Dir));
@@ -56,16 +31,16 @@ Dir* create_dir(char* path) {
     dir->path[len] = '\0';
     free(path);
 
-    dir->f_size = 64;
-    dir->files = malloc(sizeof(char*) * dir->f_size);
+    dir->file_capacity = 64;
+    dir->files = malloc(sizeof(char*) * dir->file_capacity);
     if (dir->files == NULL) {
         free(dir->path);
         free(dir);
         exit(1);
     }
 
-    dir->d_size = 64;
-    dir->dirs = malloc(sizeof(Dir*) * dir->d_size);
+    dir->dir_capacity = 64;
+    dir->dirs = malloc(sizeof(Dir*) * dir->dir_capacity);
     if (dir->dirs == NULL) {
         free(dir->path);
         free(dir->files);
@@ -74,8 +49,8 @@ Dir* create_dir(char* path) {
     }
 
     dir->size = 0;
-    dir->f_count = 0;
-    dir->d_count = 0;
+    dir->file_count = 0;
+    dir->dir_count = 0;
 
     dir->is_hidden = false;
     dir->is_system = false;
@@ -86,11 +61,11 @@ Dir* create_dir(char* path) {
 void free_dir(Dir* dir) {
     if (dir == NULL) return;
 
-    for (int i = 0; dir->files[i] != NULL; i++) {
+    for (int i = 0; i < dir->file_count; i++) {
         free(dir->files[i]);
     }
 
-    for (int i = 0; dir->dirs[i] != NULL; i++) {
+    for (int i = 0; i < dir->dir_count; i++) {
         free_dir(dir->dirs[i]);
     }
 
@@ -101,25 +76,25 @@ void free_dir(Dir* dir) {
 }
 
 void append_filename(Dir* dir, char* filename) {
-    if (dir->f_count >= dir->f_size) {
-        char** tmp = realloc(dir->files, sizeof(char*) * dir->f_size * 2);
+    if (dir->file_count >= dir->file_capacity) {
+        char** tmp = realloc(dir->files, sizeof(char*) * dir->file_capacity * 2);
         if (tmp == NULL) { /* TODO: handle that */ }
         dir->files = tmp;
-        dir->f_size *= 2;
+        dir->file_capacity *= 2;
     }
 
-    dir->files[dir->f_count++] = filename;
+    dir->files[dir->file_count++] = filename;
 }
 
 void append_dir(Dir* parent, Dir* child) {
-    if (parent->d_count >= parent->d_size) {
-        Dir** tmp = realloc(parent->dirs, sizeof(Dir*) * parent->d_size * 2);
+    if (parent->dir_count >= parent->dir_capacity) {
+        Dir** tmp = realloc(parent->dirs, sizeof(Dir*) * parent->dir_capacity * 2);
         if (tmp == NULL) { /* TODO: handle that */ }
         parent->dirs = tmp;
-        parent->d_size *= 2;
+        parent->dir_capacity *= 2;
     }
 
-    parent->dirs[parent->d_count++] = child;
+    parent->dirs[parent->dir_count++] = child;
 }
 
 #ifdef _WIN32
@@ -146,14 +121,7 @@ Dir* traverse_tree(char* path) {
             continue;
             }
 
-        size_t len1 = strlen(root->path);
-        size_t len2 = strlen(data.cFileName);
-        char* new_path = malloc(len1 + len2 + 2);
-        strncpy(new_path, root->path, len1);
-        new_path[len1] = PATH_SEP;
-        strncpy(new_path + len1 + 1, data.cFileName, len2);
-        new_path[len1 + len2 + 1] = '\0';
-
+        char* new_path = join_path(path, data.cFileName);
         if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             Dir* child = traverse_tree(new_path);
             if (data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) child->is_hidden = true;
@@ -165,8 +133,6 @@ Dir* traverse_tree(char* path) {
 
     } while (FindNextFile(handle, &data));
 
-    append_filename(root, NULL);
-    append_dir(root, NULL);
     FindClose(handle);
     return root;
 }
@@ -188,15 +154,7 @@ Dir* traverse_tree(char* path) {
         }
 
         struct stat path_stat;
-
-        size_t len1 = strlen(root->path);
-        size_t len2 = strlen(dirent->d_name);
-        char* new_path = malloc(len1 + len2 + 2);
-        strncpy(new_path, root->path, len1);
-        new_path[len1] = PATH_SEP;
-        strncpy(new_path + len1 + 1, dirent->d_name, len2);
-        new_path[len1 + len2 + 1] = '\0';
-
+        char* new_path = join_path(path, dirent->d_name);
         if (stat(new_path, &path_stat) == 0) {
             if (S_ISDIR(path_stat.st_mode)) {
                 Dir* child = traverse_tree(new_path);
@@ -208,8 +166,6 @@ Dir* traverse_tree(char* path) {
         }
     }
 
-    append_filename(root, NULL);
-    append_dir(root, NULL);
     closedir(dir);
     return root;
 }
@@ -220,7 +176,7 @@ void calc_size(Dir* root) {
     if (root == NULL) return;
 
     HANDLE handle = INVALID_HANDLE_VALUE;
-    for (int i = 0; root->files[i] != NULL; i++) {
+    for (int i = 0; i < root->file_count; i++) {
         // get a handle to that file
         handle = CreateFile(
         TEXT(root->files[i]), GENERIC_READ, FILE_SHARE_READ, NULL,
@@ -231,7 +187,7 @@ void calc_size(Dir* root) {
     }
     CloseHandle(handle);
 
-    for (int i = 0; root->dirs[i] != NULL; i++) {
+    for (int i = 0; i < root->dir_count; i++) {
         calc_size(root->dirs[i]);
         root->size += root->dirs[i]->size;
     }
@@ -241,13 +197,13 @@ void calc_size(Dir* root) {
     if (root == NULL) return;
 
     struct stat st;
-    for (int i = 0; root->files[i] != NULL; i++) {
+    for (int i = 0; i < root->file_count; i++) {
         if (stat(root->files[i], &st) == 0) {
             root->size += st.st_size;
         }
     }
 
-    for (int i = 0; root->dirs[i] != NULL; i++) {
+    for (int i = 0; i < root->dir_count; i++) {
         calc_size(root->dirs[i]);
         root->size += root->dirs[i]->size;
     }
@@ -290,7 +246,7 @@ void print_info(Dir* root) {
     }
 
     printf("%-35s - %10s\n", root->path, str_size);
-    for (int i = 0; root->dirs[i] != NULL; i++) {
+    for (int i = 0; i < root->dir_count; i++) {
         depth++;
         if (depth <= max_depth) {
             print_info(root->dirs[i]);
