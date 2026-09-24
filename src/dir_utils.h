@@ -9,6 +9,7 @@
 #define SHOW_HIDDEN 0x02
 
 extern uint8_t flags;
+extern int max_depth;
 
 typedef struct dir {
     char* path;

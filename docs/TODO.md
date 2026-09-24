@@ -17,7 +17,7 @@
 ## Week 2 — Reliability
 
 - [x] Add human-readable sizes
-- [ ] Add depth limiting
+- [x] Add depth limiting
 - [ ] Add sorting by size
 - [x] Decide hidden-file behavior
 - [ ] Add graceful permission/error handling

@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef _WIN32
@@ -136,7 +137,7 @@ Dir* traverse_tree(char* path) {
     if (handle == INVALID_HANDLE_VALUE) {
         fprintf(stderr, "Couldn't open directory '%s'\n", root->path);
         free_dir(root);
-        return NULL;
+        exit(1);
     }
 
     do {
@@ -176,7 +177,7 @@ Dir* traverse_tree(char* path) {
     if (dir == NULL) {
         fprintf(stderr, "Couldn't open directory '%s'\n", root->path);
         free_dir(root);
-        return NULL;
+        exit(1);
     }
 
     struct dirent *dirent;
@@ -258,6 +259,8 @@ const char* units_1024[] = {"KiB", "MiB", "GiB", "TiB"};
 const char* units_1000[] = {"KB", "MB", "GB", "TB"};
 
 void print_info(Dir* root) {
+    static int depth = 0;
+
     if (root == NULL) return;
     if (!(flags & SHOW_HIDDEN) && (root->is_hidden || root->is_system)) return;
 
@@ -286,8 +289,12 @@ void print_info(Dir* root) {
         snprintf(str_size, 20, "%.2f %s", size_in_unit, unit);
     }
 
-    printf("%s - %s\n", root->path, str_size);
+    printf("%-35s - %10s\n", root->path, str_size);
     for (int i = 0; root->dirs[i] != NULL; i++) {
-        print_info(root->dirs[i]);
+        depth++;
+        if (depth <= max_depth) {
+            print_info(root->dirs[i]);
+        }
+        depth--;
     }
 }

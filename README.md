@@ -10,33 +10,17 @@ The goal of this project is to build, test, document, and release a small useful
 
 This is **not** intended to become a full replacement for tools such as `du`.
 
-## Planned features
-
-- [ ] Analyze a directory recursively
-- [ ] Calculate file and directory sizes
-- [ ] Human-readable size formatting
-- [ ] Limit traversal depth
-- [ ] Sort results by size
-- [ ] Handle inaccessible files and directories gracefully
-- [ ] Optional inclusion of hidden files
-- [ ] Clear exit codes
-- [ ] Automated tests
-- [ ] Sanitizer testing
-- [ ] CI
-- [ ] Linux and Windows support
-- [ ] Documentation and usage examples
-- [ ] v1.0.0 release
-
 ## Example
 
 ```text
-$ dirsize ~/Projects
+$ dirsize ~/Downloads
 
-12.4 GB  ~/Projects
-4.8 GB   ~/Projects/my-lang
-3.1 GB   ~/Projects/kilo
-2.2 GB   ~/Projects/clipboard-manager
-1.1 GB   ~/Projects/other
+18.7 GB  ~/Downloads
+7.2 GB   ~/Downloads/Software
+4.6 GB   ~/Downloads/Videos
+3.8 GB   ~/Downloads/Documents
+2.1 GB   ~/Downloads/Archives
+1.0 GB   ~/Downloads/Other
 ```
 
 ## Building
