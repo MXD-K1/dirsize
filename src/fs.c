@@ -1,3 +1,4 @@
+#include <stdio.h>
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -5,7 +6,82 @@
 #include <sys/stat.h>
 #endif
 
+struct FS_Dir {
+    char* path;
+#ifdef _WIN32
+    HANDLE handle;
+#else
+    DIR* handle;
+#endif
+};
+
 #include "fs.h"
+
+#ifdef _WIN32
+bool fs_search_open_dir(const char* path, FS_Dir* dir) {
+    char search_path[4096];
+    HANDLE handle = INVALID_HANDLE_VALUE;
+
+    WIN32_FIND_DATA data;
+
+    // Create the search pattern by appending \* to the directory path
+    snprintf(search_path, 4096, "%s\\*", path);
+    handle = FindFirstFile(search_path, &data);
+
+    if (handle == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+
+    size_t len = strlen(data.cFileName);
+    dir->path = malloc(len + 1);
+    if (path == NULL) { /* TODO: handle error */ }
+    strcpy(dir->path, data.cFileName);
+    dir->path[len] = '\0';
+
+    dir->handle = handle;
+
+    return true;
+}
+#else
+bool fs_search_open_dir(const char* path, FS_Dir dir) {
+    DIR *dir = opendir(root->path);
+    if (dir == NULL) {
+        return false;
+    }
+
+    dir->handle = dir;
+    return true;
+}
+#endif
+
+#ifdef _WIN32
+void fs_next_entry(FS_Dir* dir, bool* at_end) {
+    *at_end = FindNextFile(dir->handle, NULL);
+}
+#else
+void fs_next_entry(FS_Dir* dir, bool* at_end) {
+    struct dirent *dirent;
+
+    dirent = readdir(dir)
+    if (dirent == NULL) {
+        *at_end = true;
+        return;
+    }
+
+    *at_end = false;
+}
+#endif
+
+#ifdef _WIN32
+void fs_close_dir(FS_Dir* dir) {
+    free(dir->path);
+    FindClose(dir->handle);
+}
+#else
+void fs_close_dir(FS_Dir* dir) {
+    closedir(dir->handle);
+}
+#endif
 
 #ifdef _WIN32
 bool fs_entry_is_dir(const char* path, bool* is_dir) {

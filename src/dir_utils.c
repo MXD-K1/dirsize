@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -9,6 +10,25 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #endif
+
+struct dir {
+    char* path;
+
+    char** files;          /* Array of files inside the directory. */
+    size_t file_count;     /* Internal tracker. */
+    size_t file_capacity;  /* Internal tracker. */
+
+    struct dir** dirs;     /* Array of directories inside the directory. */
+    size_t dir_count;      /* Internal tracker. */
+    size_t dir_capacity;   /* Internal tracker. */
+
+
+    /* Directory attributes: */
+    bool is_hidden;        /* Is the directory hidden? */
+    bool is_system;        /* Is this a system directory? */
+
+    size_t size;           /* directory contents size in bytes. */
+};
 
 #include "fs.h"
 #include "path.h"
@@ -175,8 +195,8 @@ void calc_size(Dir* root) {
 
     size_t size;
     for (int i = 0; i < root->file_count; i++) {
-        fs_get_file_size(root->files[i], &size);
-        root->size += size;
+        if (fs_get_file_size(root->files[i], &size))  root->size += size;
+        else fprintf(stderr, "Couldn't inspect '%s' size.\n", root->files[i]);
     }
 
     for (int i = 0; i < root->dir_count; i++) {
