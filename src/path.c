@@ -29,7 +29,7 @@ char* normalize_path(const char* path) {
 char* join_path(const char* path_1, const char* path_2) {
     const size_t len_1 = strlen(path_1);
     const size_t len_2 = strlen(path_2);
-    char* joined_path = malloc(len_1 + len_2 + 2);
+    char* joined_path = malloc(len_1 + len_2 + 2); /* one for seperator and one for \0 */
 
     strncpy(joined_path, path_1, len_1);
     joined_path[len_1] = PATH_SEP;

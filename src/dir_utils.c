@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "path.h"
-
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -12,7 +10,8 @@
 #include <sys/stat.h>
 #endif
 
-
+#include "fs.h"
+#include "path.h"
 #include "dir_utils.h"
 
 Dir* create_dir(char* path) {
@@ -75,7 +74,7 @@ void free_dir(Dir* dir) {
     free(dir);
 }
 
-void append_filename(Dir* dir, char* filename) {
+void append_file(Dir* dir, char* filename) {
     if (dir->file_count >= dir->file_capacity) {
         char** tmp = realloc(dir->files, sizeof(char*) * dir->file_capacity * 2);
         if (tmp == NULL) { /* TODO: handle that */ }
@@ -121,14 +120,14 @@ Dir* traverse_tree(char* path) {
             continue;
             }
 
-        char* new_path = join_path(path, data.cFileName);
+        char* new_path = join_path(root->path, data.cFileName);
         if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             Dir* child = traverse_tree(new_path);
             if (data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) child->is_hidden = true;
             if (data.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) child->is_system = true;
             append_dir(root, child);
         } else {
-            append_filename(root, new_path);
+            append_file(root, new_path);
         }
 
     } while (FindNextFile(handle, &data));
@@ -154,14 +153,14 @@ Dir* traverse_tree(char* path) {
         }
 
         struct stat path_stat;
-        char* new_path = join_path(path, dirent->d_name);
+        char* new_path = join_path(root->path, dirent->d_name);
         if (stat(new_path, &path_stat) == 0) {
             if (S_ISDIR(path_stat.st_mode)) {
                 Dir* child = traverse_tree(new_path);
                 if (dirent->d_name[0] == '.') child->is_hidden = true;
                 append_dir(root, child);
             } else if (S_ISREG(path_stat.st_mode)) {
-                append_filename(root, new_path);
+                append_file(root, new_path);
             }
         }
     }
@@ -171,36 +170,13 @@ Dir* traverse_tree(char* path) {
 }
 #endif
 
-#ifdef _WIN32
 void calc_size(Dir* root) {
     if (root == NULL) return;
 
-    HANDLE handle = INVALID_HANDLE_VALUE;
+    size_t size;
     for (int i = 0; i < root->file_count; i++) {
-        // get a handle to that file
-        handle = CreateFile(
-        TEXT(root->files[i]), GENERIC_READ, FILE_SHARE_READ, NULL,
-        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL
-        );
-
-        root->size += (size_t) GetFileSize(handle, NULL);
-    }
-    CloseHandle(handle);
-
-    for (int i = 0; i < root->dir_count; i++) {
-        calc_size(root->dirs[i]);
-        root->size += root->dirs[i]->size;
-    }
-}
-#else
-void calc_size(Dir* root) {
-    if (root == NULL) return;
-
-    struct stat st;
-    for (int i = 0; i < root->file_count; i++) {
-        if (stat(root->files[i], &st) == 0) {
-            root->size += st.st_size;
-        }
+        fs_get_file_size(root->files[i], &size);
+        root->size += size;
     }
 
     for (int i = 0; i < root->dir_count; i++) {
@@ -208,15 +184,11 @@ void calc_size(Dir* root) {
         root->size += root->dirs[i]->size;
     }
 }
-#endif
-
 
 const char* units_1024[] = {"KiB", "MiB", "GiB", "TiB"};
 const char* units_1000[] = {"KB", "MB", "GB", "TB"};
 
-void print_info(Dir* root) {
-    static int depth = 0;
-
+void print_info(Dir* root, const uint8_t flags, const int max_depth) {
     if (root == NULL) return;
     if (!(flags & SHOW_HIDDEN) && (root->is_hidden || root->is_system)) return;
 
@@ -247,10 +219,8 @@ void print_info(Dir* root) {
 
     printf("%-35s - %10s\n", root->path, str_size);
     for (int i = 0; i < root->dir_count; i++) {
-        depth++;
-        if (depth <= max_depth) {
-            print_info(root->dirs[i]);
+        if (max_depth > 0) {
+            print_info(root->dirs[i], flags, max_depth - 1);
         }
-        depth--;
     }
 }

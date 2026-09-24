@@ -8,9 +8,6 @@
 #define SI_MODE     0x01
 #define SHOW_HIDDEN 0x02
 
-extern uint8_t flags;
-extern int max_depth;
-
 typedef struct dir {
     char* path;
 
@@ -34,6 +31,6 @@ Dir* create_dir(char* path);
 void free_dir(Dir* dir);
 Dir* traverse_tree(char* path);
 void calc_size(Dir* root);
-void print_info(Dir* root);
+void print_info(Dir* root, uint8_t flags, int max_depth);
 
 #endif //DIRSIZE_DIR_UTILS_H

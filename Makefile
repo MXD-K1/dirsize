@@ -3,13 +3,18 @@ CFlags := -std=c17
 LDFlags := -lm
 DebugFlags := -g -fsanitize=address,undefined,leak -fno-omit-frame-pointer
 
+SOURCES = main.c dir_utils.c path.c fs.c
+
+DEBUG_OBJECTS = $(SOURCES:%.c=build/debug/%.o)
+RELEASE_OBJECTS = $(SOURCES:%.c=build/release/%.o)
+
 all: dirsize
 
-dirsize: build/release/main.o build/release/dir_utils.o build/release/path.o
+dirsize: $(RELEASE_OBJECTS)
 	mkdir -p build/release
 	$(CC) $(CFlags) $^ $(LDFlags) -o build/release/$@
 
-test-dirsize: build/debug/main.o build/debug/dir_utils.o build/debug/path.o
+test-dirsize: $(DEBUG_OBJECTS)
 	mkdir -p build/debug
 	$(CC) $(CFlags) $(DebugFlags) $^ $(LDFlags) -o build/debug/$@
 

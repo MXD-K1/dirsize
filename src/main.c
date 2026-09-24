@@ -5,10 +5,11 @@
 #include "dir_utils.h"
 #include "path.h"
 
-uint8_t flags = 0x00;
-int max_depth = 128;
 
 int main(int argc, char *argv[]) {
+    uint8_t flags = 0x00;
+    int max_depth = 128;
+
     if (argc > 2) {
         for (int i = 2; i < argc; i++) {
             if (strcmp(argv[i], "--si") == 0) {
@@ -43,7 +44,7 @@ int main(int argc, char *argv[]) {
 
     Dir* root = traverse_tree(path);
     calc_size(root);
-    print_info(root);
+    print_info(root, flags, max_depth);
 
     free_dir(root);
 
