@@ -41,12 +41,7 @@ bool fs_search_open_dir(const char* path, FS_Dir* fs_dir) {
         return false;
     }
 
-    size_t len = strlen(data.cFileName);
-    fs_dir->name = malloc(len + 1);
-    if (path == NULL) { /* TODO: handle error */ }
-    strcpy(fs_dir->name, data.cFileName);
-    fs_dir->name[len] = '\0';
-
+    fs_dir->name = data.cFileName;
     fs_dir->handle = handle;
 
     return true;
@@ -72,7 +67,7 @@ bool fs_search_open_dir(const char* path, FS_Dir* fs_dir) {
 void fs_next_entry(FS_Dir* dir, bool* at_end) {
     WIN32_FIND_DATA data;
     *at_end = FindNextFile(dir->handle, &data);
-    dir->name = data.cFilename;
+    dir->name = data.cFileName;
 }
 #else
 void fs_next_entry(FS_Dir* dir, bool* at_end) {

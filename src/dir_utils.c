@@ -4,13 +4,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-#ifdef _WIN32
-#include <windows.h>
-#else
-#include <dirent.h>
-#include <sys/stat.h>
-#endif
-
 struct dir {
     char* path;
 
