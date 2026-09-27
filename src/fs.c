@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -7,7 +10,7 @@
 #endif
 
 struct FS_Dir {
-    char* path;
+    char* name;
 #ifdef _WIN32
     HANDLE handle;
 #else
@@ -17,8 +20,14 @@ struct FS_Dir {
 
 #include "fs.h"
 
+FS_Dir* create_fs_dir(void) {
+    FS_Dir* fs_dir = malloc(sizeof(FS_Dir));
+    *fs_dir = (FS_Dir){0};
+    return fs_dir;
+}
+
 #ifdef _WIN32
-bool fs_search_open_dir(const char* path, FS_Dir* dir) {
+bool fs_search_open_dir(const char* path, FS_Dir* fs_dir) {
     char search_path[4096];
     HANDLE handle = INVALID_HANDLE_VALUE;
 
@@ -33,53 +42,67 @@ bool fs_search_open_dir(const char* path, FS_Dir* dir) {
     }
 
     size_t len = strlen(data.cFileName);
-    dir->path = malloc(len + 1);
+    fs_dir->name = malloc(len + 1);
     if (path == NULL) { /* TODO: handle error */ }
-    strcpy(dir->path, data.cFileName);
-    dir->path[len] = '\0';
+    strcpy(fs_dir->name, data.cFileName);
+    fs_dir->name[len] = '\0';
 
-    dir->handle = handle;
+    fs_dir->handle = handle;
 
     return true;
 }
 #else
-bool fs_search_open_dir(const char* path, FS_Dir dir) {
-    DIR *dir = opendir(root->path);
+bool fs_search_open_dir(const char* path, FS_Dir* fs_dir) {
+    DIR *dir = opendir(path);
     if (dir == NULL) {
         return false;
     }
 
-    dir->handle = dir;
+    struct dirent *dirent;
+    dirent = readdir(dir);
+
+    fs_dir->name = dirent->d_name;
+    fs_dir->handle = dir;
+
     return true;
 }
 #endif
 
 #ifdef _WIN32
 void fs_next_entry(FS_Dir* dir, bool* at_end) {
-    *at_end = FindNextFile(dir->handle, NULL);
+    WIN32_FIND_DATA data;
+    *at_end = FindNextFile(dir->handle, &data);
+    dir->name = data.cFilename;
 }
 #else
 void fs_next_entry(FS_Dir* dir, bool* at_end) {
     struct dirent *dirent;
 
-    dirent = readdir(dir)
+    dirent = readdir(dir->handle);
     if (dirent == NULL) {
         *at_end = true;
         return;
     }
 
+    dir->name = dirent->d_name;
     *at_end = false;
 }
 #endif
 
+void free_fs_dir(FS_Dir* dir) {
+    // free(dir->name);
+    free(dir);
+}
+
 #ifdef _WIN32
 void fs_close_dir(FS_Dir* dir) {
-    free(dir->path);
     FindClose(dir->handle);
+    free_fs_dir(dir);
 }
 #else
 void fs_close_dir(FS_Dir* dir) {
     closedir(dir->handle);
+    free_fs_dir(dir);
 }
 #endif
 
@@ -170,6 +193,11 @@ bool fs_entry_is_system_dir(const char* path, bool* is_system) {
 }
 #endif
 
+void fs_get_entry_name(const FS_Dir* entry, char* name) {
+    size_t len = strlen(entry->name);
+    strcpy(name, entry->name);
+    name[len] = '\0';
+}
 
 #ifdef _WIN32
 bool fs_get_file_size(const char* file_path, size_t* size) {

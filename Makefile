@@ -26,6 +26,9 @@ build/debug/%.o: src/%.c
 	mkdir -p build/debug
 	$(CC) $(CFlags) $(DebugFlags) $< -c -o $@
 
+debug:
+	LSAN_OPTIONS=detect_leaks=0 gdb build/debug/test-dirsize
+
 clean:
 	rm -rf build/
 

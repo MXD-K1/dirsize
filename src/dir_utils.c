@@ -116,79 +116,46 @@ void append_dir(Dir* parent, Dir* child) {
     parent->dirs[parent->dir_count++] = child;
 }
 
-#ifdef _WIN32
 Dir* traverse_tree(char* path) {
     Dir* root = create_dir(path);
 
-    char search_path[4096];
-    WIN32_FIND_DATA data;
-    HANDLE handle = INVALID_HANDLE_VALUE;
-
-    // Create the search pattern by appending \* to the directory path
-    snprintf(search_path, 4096, "%s\\*", root->path);
-    handle = FindFirstFile(search_path, &data);
-
-    if (handle == INVALID_HANDLE_VALUE) {
+    FS_Dir* fs_dir = create_fs_dir();
+    if (!fs_search_open_dir(root->path, fs_dir)) {
         fprintf(stderr, "Couldn't open directory '%s'\n", root->path);
+        fs_close_dir(fs_dir);
         free_dir(root);
         exit(1);
     }
 
+    bool at_end;
     do {
-        if (strcmp(data.cFileName, ".") == 0
-            || strcmp(data.cFileName, "..") == 0) {
+        char name[256];
+        fs_get_entry_name(fs_dir, name);
+        if (strcmp(name, ".") == 0
+            || strcmp(name, "..") == 0) {
+            fs_next_entry(fs_dir, &at_end);
             continue;
             }
 
-        char* new_path = join_path(root->path, data.cFileName);
-        if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+        char* new_path = join_path(root->path, name);
+
+        bool is_dir;
+        fs_entry_is_dir(new_path, &is_dir);
+        if (is_dir) {
             Dir* child = traverse_tree(new_path);
-            if (data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) child->is_hidden = true;
-            if (data.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) child->is_system = true;
+            fs_entry_is_hidden(child->path, &child->is_hidden);
+            fs_entry_is_system_dir(child->path, &child->is_system);
             append_dir(root, child);
         } else {
             append_file(root, new_path);
         }
 
-    } while (FindNextFile(handle, &data));
+        fs_next_entry(fs_dir, &at_end);
+    } while (!at_end);
 
-    FindClose(handle);
+    fs_close_dir(fs_dir);
     return root;
 }
-#else
-Dir* traverse_tree(char* path) {
-    Dir* root = create_dir(path);
-    DIR *dir = opendir(root->path);
-    if (dir == NULL) {
-        fprintf(stderr, "Couldn't open directory '%s'\n", root->path);
-        free_dir(root);
-        exit(1);
-    }
-
-    struct dirent *dirent;
-    while ((dirent = readdir(dir)) != NULL) {
-        if (strcmp(dirent->d_name, ".") == 0
-            || strcmp(dirent->d_name, "..") == 0) {
-            continue;
-        }
-
-        struct stat path_stat;
-        char* new_path = join_path(root->path, dirent->d_name);
-        if (stat(new_path, &path_stat) == 0) {
-            if (S_ISDIR(path_stat.st_mode)) {
-                Dir* child = traverse_tree(new_path);
-                if (dirent->d_name[0] == '.') child->is_hidden = true;
-                append_dir(root, child);
-            } else if (S_ISREG(path_stat.st_mode)) {
-                append_file(root, new_path);
-            }
-        }
-    }
-
-    closedir(dir);
-    return root;
-}
-#endif
 
 void calc_size(Dir* root) {
     if (root == NULL) return;
