@@ -112,8 +112,8 @@ void append_dir(Dir* parent, Dir* child) {
 Dir* traverse_tree(char* path) {
     Dir* root = create_dir(path);
 
-    FS_Dir* fs_dir = create_fs_dir();
-    if (!fs_search_open_dir(root->path, fs_dir)) {
+    FS_Dir* fs_dir; // = create_fs_dir();
+    if (!fs_open_dir(root->path, &fs_dir)) {
         fprintf(stderr, "Couldn't open directory '%s'\n", root->path);
         fs_close_dir(fs_dir);
         free_dir(root);
@@ -136,8 +136,8 @@ Dir* traverse_tree(char* path) {
         fs_entry_is_dir(new_path, &is_dir);
         if (is_dir) {
             Dir* child = traverse_tree(new_path);
-            fs_entry_is_hidden(child->path, &child->is_hidden);
-            fs_entry_is_system_dir(child->path, &child->is_system);
+            fs_entry_is_hidden(name, &child->is_hidden);
+            fs_entry_is_system_dir(name, &child->is_system);
             append_dir(root, child);
         } else {
             append_file(root, new_path);

@@ -22,12 +22,15 @@ struct FS_Dir {
 
 FS_Dir* create_fs_dir(void) {
     FS_Dir* fs_dir = malloc(sizeof(FS_Dir));
+    if (fs_dir == NULL) {
+        /* TODO: exist program */
+    }
     *fs_dir = (FS_Dir){0};
     return fs_dir;
 }
 
 #ifdef _WIN32
-bool fs_search_open_dir(const char* path, FS_Dir* fs_dir) {
+bool fs_open_dir(const char* path, FS_Dir** fs_dir) {
     char search_path[4096];
     HANDLE handle = INVALID_HANDLE_VALUE;
 
@@ -41,23 +44,31 @@ bool fs_search_open_dir(const char* path, FS_Dir* fs_dir) {
         return false;
     }
 
-    fs_dir->name = data.cFileName;
-    fs_dir->handle = handle;
+    FS_Dir* temp_dir = create_fs_dir();
+
+    temp_dir->name = data.cFileName;
+    temp_dir->handle = handle;
+    *fs_dir = temp_dir;
 
     return true;
 }
 #else
-bool fs_search_open_dir(const char* path, FS_Dir* fs_dir) {
+bool fs_open_dir(const char* path, FS_Dir** fs_dir) {
     DIR *dir = opendir(path);
     if (dir == NULL) {
         return false;
     }
 
-    struct dirent *dirent;
-    dirent = readdir(dir);
+    struct dirent *dirent = readdir(dir);
+    if (dirent == NULL) {
+        /* TODO: exit program */
+    }
 
-    fs_dir->name = dirent->d_name;
-    fs_dir->handle = dir;
+    FS_Dir* temp_dir = create_fs_dir();
+
+    temp_dir->name = dirent->d_name;
+    temp_dir->handle = dir;
+    *fs_dir = temp_dir;
 
     return true;
 }
@@ -71,9 +82,7 @@ void fs_next_entry(FS_Dir* dir, bool* at_end) {
 }
 #else
 void fs_next_entry(FS_Dir* dir, bool* at_end) {
-    struct dirent *dirent;
-
-    dirent = readdir(dir->handle);
+    struct dirent* dirent = readdir(dir->handle);
     if (dirent == NULL) {
         *at_end = true;
         return;
@@ -84,20 +93,15 @@ void fs_next_entry(FS_Dir* dir, bool* at_end) {
 }
 #endif
 
-void free_fs_dir(FS_Dir* dir) {
-    // free(dir->name);
-    free(dir);
-}
-
 #ifdef _WIN32
 void fs_close_dir(FS_Dir* dir) {
     FindClose(dir->handle);
-    free_fs_dir(dir);
+    free(dir);
 }
 #else
 void fs_close_dir(FS_Dir* dir) {
     closedir(dir->handle);
-    free_fs_dir(dir);
+    free(dir);
 }
 #endif
 
