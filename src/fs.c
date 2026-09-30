@@ -192,10 +192,8 @@ bool fs_entry_is_system_dir(const char* path, bool* is_system) {
 }
 #endif
 
-void fs_get_entry_name(const FS_Dir* entry, char* name) {
-    size_t len = strlen(entry->name);
-    strcpy(name, entry->name);
-    name[len] = '\0';
+char* fs_get_entry_name(const FS_Dir* entry) {
+    return entry->name;
 }
 
 #ifdef _WIN32

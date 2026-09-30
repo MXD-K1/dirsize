@@ -122,8 +122,7 @@ Dir* traverse_tree(char* path) {
 
     bool at_end;
     do {
-        char name[256];
-        fs_get_entry_name(fs_dir, name);
+        char* name = fs_get_entry_name(fs_dir);
         if (strcmp(name, ".") == 0
             || strcmp(name, "..") == 0) {
             fs_next_entry(fs_dir, &at_end);

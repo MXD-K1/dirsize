@@ -13,7 +13,7 @@ bool fs_entry_is_dir(const char* path, bool* is_dir);
 bool fs_entry_is_file(const char* path, bool* is_file);
 bool fs_entry_is_hidden(const char* path, bool* is_hidden);
 bool fs_entry_is_system_dir(const char* path, bool* is_system);
-void fs_get_entry_name(const FS_Dir* entry, char* name);
+char* fs_get_entry_name(const FS_Dir* entry);
 bool fs_get_file_size(const char* file_path, size_t* size);
 
 #endif //DIRSIZE_FILESYSTEM_H
