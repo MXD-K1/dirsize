@@ -41,7 +41,6 @@ Dir* create_dir(char* path) {
     }
     strcpy(dir->path, path);
     dir->path[len] = '\0';
-    free(path);
 
     dir->file_capacity = 64;
     dir->files = malloc(sizeof(char*) * dir->file_capacity);
@@ -109,10 +108,11 @@ void append_dir(Dir* parent, Dir* child) {
     parent->dirs[parent->dir_count++] = child;
 }
 
+/* It expects the path to be dynamically allocated. */
 Dir* traverse_tree(char* path) {
     Dir* root = create_dir(path);
 
-    FS_Dir* fs_dir; // = create_fs_dir();
+    FS_Dir* fs_dir;
     if (!fs_open_dir(root->path, &fs_dir)) {
         fprintf(stderr, "Couldn't open directory '%s'\n", root->path);
         fs_close_dir(fs_dir);
@@ -147,6 +147,8 @@ Dir* traverse_tree(char* path) {
     } while (!at_end);
 
     fs_close_dir(fs_dir);
+    free(path);
+
     return root;
 }
 
