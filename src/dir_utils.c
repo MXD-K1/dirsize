@@ -122,7 +122,7 @@ Dir* traverse_tree(char* path) {
 
     bool at_end;
     do {
-        char* name = fs_get_entry_name(fs_dir);
+        const char* name = fs_get_entry_name(fs_dir);
         if (strcmp(name, ".") == 0
             || strcmp(name, "..") == 0) {
             fs_next_entry(fs_dir, &at_end);
@@ -132,9 +132,16 @@ Dir* traverse_tree(char* path) {
         char* new_path = join_path(root->path, name);
 
         bool is_dir;
-        fs_entry_is_dir(new_path, &is_dir);
+        if (!fs_entry_is_dir(new_path, &is_dir)) {
+            return NULL;
+        }
+
         if (is_dir) {
             Dir* child = traverse_tree(new_path);
+            if (child == NULL) {
+                return NULL;
+            }
+
             fs_entry_is_hidden(name, &child->is_hidden);
             fs_entry_is_system_dir(name, &child->is_system);
             append_dir(root, child);

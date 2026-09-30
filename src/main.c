@@ -43,6 +43,10 @@ int main(int argc, char *argv[]) {
     path = normalize_path(path);
 
     Dir* root = traverse_tree(path);
+    if (root == NULL) {
+        return 1;
+    }
+
     calc_size(root);
     print_info(root, flags, max_depth);
 

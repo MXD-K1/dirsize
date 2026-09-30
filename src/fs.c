@@ -23,7 +23,7 @@ struct FS_Dir {
 FS_Dir* create_fs_dir(void) {
     FS_Dir* fs_dir = malloc(sizeof(FS_Dir));
     if (fs_dir == NULL) {
-        /* TODO: exist program */
+        return NULL;
     }
     *fs_dir = (FS_Dir){0};
     return fs_dir;
@@ -45,6 +45,10 @@ bool fs_open_dir(const char* path, FS_Dir** fs_dir) {
     }
 
     FS_Dir* temp_dir = create_fs_dir();
+    if (temp_dir == NULL) {
+        FindClose(handle);
+        return false;
+    }
 
     temp_dir->name = data.cFileName;
     temp_dir->handle = handle;
@@ -61,10 +65,15 @@ bool fs_open_dir(const char* path, FS_Dir** fs_dir) {
 
     struct dirent *dirent = readdir(dir);
     if (dirent == NULL) {
-        /* TODO: exit program */
+        closedir(dir);
+        return false;
     }
 
     FS_Dir* temp_dir = create_fs_dir();
+    if (temp_dir == NULL) {
+        closedir(dir);
+        return false;
+    }
 
     temp_dir->name = dirent->d_name;
     temp_dir->handle = dir;
