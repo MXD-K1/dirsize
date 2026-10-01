@@ -195,42 +195,31 @@ void calc_size(Dir* root) {
     }
 }
 
-const char* units_1024[] = {"KiB", "MiB", "GiB", "TiB"};
-const char* units_1000[] = {"KB", "MB", "GB", "TB"};
+// ------------------------------------
+size_t get_dir_size(const Dir* dir) {
+    return dir->size;
+}
 
-void print_info(Dir* root, const uint8_t flags, const int max_depth) {
-    if (root == NULL) return;
-    if (!(flags & SHOW_HIDDEN) && (root->is_hidden || root->is_system)) return;
+char* get_dir_path(const Dir* dir) {
+    return dir->path;
+}
 
-    const int unit_size = flags & SI_MODE ? 1000: 1024;
+size_t get_dir_file_count(const Dir* dir) {
+    return dir->file_count;
+}
 
-    int level = 0;
-    size_t size = root->size;
-    while (size >= unit_size) {
-        size = size / unit_size;
-        level++;
-    }
+size_t get_dir_dir_count(const Dir* dir) {
+    return dir->dir_count;
+}
 
-    if (level > 4) {
-        fprintf(stderr, "Add more units...\n");
-        free_dir(root);
-        exit(2);
-    }
+char** get_dir_files(const Dir* dir) {
+    return dir->files;
+}
 
-    char str_size[20];
-    if (level == 0) {
-        const int size_in_unit = (int) size;
-        snprintf(str_size, 20, "%d B", size_in_unit);
-    } else {
-        const char* unit = flags & SI_MODE ? units_1000[level - 1] : units_1024[level - 1];
-        const double size_in_unit = (double) root->size / pow(unit_size, level);
-        snprintf(str_size, 20, "%.2f %s", size_in_unit, unit);
-    }
+Dir** get_dir_dirs(const Dir* dir) {
+    return dir->dirs;
+}
 
-    printf("%-35s - %10s\n", root->path, str_size);
-    for (int i = 0; i < root->dir_count; i++) {
-        if (max_depth > 0) {
-            print_info(root->dirs[i], flags, max_depth - 1);
-        }
-    }
+bool is_dir_hidden(const Dir* dir) {
+    return dir->is_hidden || dir->is_system;
 }

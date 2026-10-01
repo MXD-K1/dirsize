@@ -3,8 +3,8 @@
 #include <string.h>
 
 #include "dir_utils.h"
+#include "output.h"
 #include "path.h"
-
 
 int main(int argc, char *argv[]) {
     uint8_t flags = 0x00;
