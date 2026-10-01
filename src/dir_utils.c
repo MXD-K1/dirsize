@@ -27,7 +27,7 @@ struct dir {
 #include "path.h"
 #include "dir_utils.h"
 
-Dir* create_dir(char* path) {
+Dir* create_dir(const char* path) {
     Dir* dir = malloc(sizeof(Dir));
     if (dir == NULL) {
         exit(1);
@@ -123,7 +123,7 @@ Dir* traverse_tree(char* path) {
         fprintf(stderr, "Couldn't open directory '%s'\n", root->path);
         fs_close_dir(fs_dir);
         free_dir(root);
-        exit(1);
+        return NULL;
     }
 
     bool at_end;
@@ -140,12 +140,17 @@ Dir* traverse_tree(char* path) {
         bool is_dir;
         if (!fs_entry_is_dir(new_path, &is_dir)) {
             fprintf(stderr, "Some error happened.\n");
+            fs_close_dir(fs_dir);
+            free_dir(root);
+            free(new_path);
             return NULL;
         }
 
         if (is_dir) {
             Dir* child = traverse_tree(new_path);
             if (child == NULL) {
+                fs_close_dir(fs_dir);
+                free_dir(root);
                 return NULL;
             }
 
@@ -153,11 +158,15 @@ Dir* traverse_tree(char* path) {
             fs_entry_is_system_dir(name, &child->is_system);
             if (!append_dir(root, child)) {
                 fprintf(stderr, "Not enough storage.\n");
+                fs_close_dir(fs_dir);
+                free_dir(root);
                 return NULL;
             }
         } else {
             if (!append_file(root, new_path)) {
                 fprintf(stderr, "Not enough storage.\n");
+                fs_close_dir(fs_dir);
+                free_dir(root);
                 return NULL;
             }
         }

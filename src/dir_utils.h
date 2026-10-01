@@ -9,7 +9,7 @@
 
 typedef struct dir Dir;
 
-Dir* create_dir(char* path);
+Dir* create_dir(const char* path);
 void free_dir(Dir* dir);
 Dir* traverse_tree(char* path);
 void calc_size(Dir* root);
