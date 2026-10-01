@@ -7,11 +7,11 @@
 const char* units_1024[] = {"KiB", "MiB", "GiB", "TiB"};
 const char* units_1000[] = {"KB", "MB", "GB", "TB"};
 
-void print_info(Dir* root, const uint8_t flags, const int max_depth) {
+void print_info(Dir* root, const Options opts) {
     if (root == NULL) return;
-    if (!(flags & SHOW_HIDDEN) && is_dir_hidden(root)) return;
+    if (!opts.include_hidden && is_dir_hidden(root)) return;
 
-    const int unit_size = flags & SI_MODE ? 1000: 1024;
+    const int unit_size = opts.si_mode ? 1000: 1024;
 
     int level = 0;
     size_t size = get_dir_size(root);
@@ -31,15 +31,17 @@ void print_info(Dir* root, const uint8_t flags, const int max_depth) {
         const int size_in_unit = (int) size;
         snprintf(str_size, 20, "%d B", size_in_unit);
     } else {
-        const char* unit = flags & SI_MODE ? units_1000[level - 1] : units_1024[level - 1];
+        const char* unit = opts.si_mode ? units_1000[level - 1] : units_1024[level - 1];
         const double size_in_unit = (double) get_dir_size(root) / pow(unit_size, level);
         snprintf(str_size, 20, "%.2f %s", size_in_unit, unit);
     }
 
     printf("%-35s - %10s\n", get_dir_path(root), str_size);
     for (int i = 0; i < get_dir_dir_count(root); i++) {
-        if (max_depth > 0) {
-            print_info(get_dir_dirs(root)[i], flags, max_depth - 1);
+        if (opts.max_depth > 0) {
+            Options new_opts = opts;
+            new_opts.max_depth -= 1;
+            print_info(get_dir_dirs(root)[i], new_opts);
         }
     }
 }

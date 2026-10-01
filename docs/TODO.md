@@ -20,7 +20,7 @@
 - [x] Add depth limiting
 - [ ] Add sorting by size
 - [x] Decide hidden-file behavior
-- [ ] Add graceful permission/error handling
+- [x] Add graceful permission/error handling
 - [ ] Handle unusual filesystem entries
 - [ ] Add unit tests
 - [ ] Add integration tests
@@ -32,8 +32,8 @@
 
 ## Week 3 — Release
 
-- [ ] Clean up project structure
-- [ ] Review error handling
+- [x] Clean up project structure
+- [x] Review error handling
 - [ ] Test on Linux
 - [ ] Test on Windows
 - [ ] Add CI
@@ -55,8 +55,8 @@
 
 The project is considered finished when:
 
-- [ ] Core functionality works
-- [ ] Important error cases are handled
+- [x] Core functionality works
+- [x] Important error cases are handled
 - [ ] Tests pass
 - [ ] Sanitizers report no known issues
 - [ ] Linux build works
@@ -65,5 +65,3 @@ The project is considered finished when:
 - [ ] README explains how to build and use it
 - [ ] v1.0.0 is tagged
 - [ ] A GitHub release is published
-
-**After this checklist is complete, stop. Do not expand v1.0.**

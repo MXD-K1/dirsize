@@ -3,7 +3,7 @@ CFlags := -std=c17
 LDFlags := -lm
 DebugFlags := -g -fsanitize=address,undefined,leak -fno-omit-frame-pointer
 
-SOURCES = main.c dir_utils.c path.c fs.c
+SOURCES = main.c dir_utils.c path.c fs.c output.c cli.c
 
 DEBUG_OBJECTS = $(SOURCES:%.c=build/debug/%.o)
 RELEASE_OBJECTS = $(SOURCES:%.c=build/release/%.o)

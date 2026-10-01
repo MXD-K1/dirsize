@@ -1,9 +1,7 @@
 #ifndef DIRSIZE_DIR_UTILS_H
 #define DIRSIZE_DIR_UTILS_H
 
-/* Temp */
-#define SI_MODE     0x01
-#define SHOW_HIDDEN 0x02
+#include <stdbool.h>
 
 typedef struct dir Dir;
 
