@@ -7,10 +7,8 @@
 #include "cli.h"
 
 int main(int argc, char *argv[]) {
-    Options options = parse_args(argc, argv);
-
-    char* path = argv[1];
-    path = normalize_path(path);
+    const Options options = parse_args(argc, argv);
+    char* path = normalize_path(options.path);
 
     Dir* root = traverse_tree(path);
     if (root == NULL) {
@@ -21,6 +19,5 @@ int main(int argc, char *argv[]) {
     print_info(root, options);
 
     free_dir(root);
-
     return 0;
 }

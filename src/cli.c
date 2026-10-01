@@ -31,7 +31,7 @@ Options parse_args(const int argc, char* argv[]) {
         if (strcmp(argv[i], "--si") == 0) {
             opts.si_mode = true;
         } else if (strcmp(argv[i], "-d") == 0
-            || strcmp(argv[i], "--depth")) {
+            || strcmp(argv[i], "--depth") == 0) {
             if (i + 1 > argc) {
                 fprintf(stderr, "Flag depth is not set to a value.\n");
                 exit(1);
@@ -45,7 +45,7 @@ Options parse_args(const int argc, char* argv[]) {
             i++; /* skip the next arg */
         } else if (strcmp(argv[i], "--include-hidden") == 0) {
             opts.include_hidden = true;
-        } else {
+        } else if (i != 1) {
             fprintf(stderr, "Unrecognized option: %s\n", argv[i]);
             exit(1);
         }
