@@ -86,26 +86,32 @@ void free_dir(Dir* dir) {
     free(dir);
 }
 
-void append_file(Dir* dir, char* filename) {
+bool append_file(Dir* dir, char* filename) {
     if (dir->file_count >= dir->file_capacity) {
         char** tmp = realloc(dir->files, sizeof(char*) * dir->file_capacity * 2);
-        if (tmp == NULL) { /* TODO: handle that */ }
+        if (tmp == NULL) {
+            return false;
+        }
         dir->files = tmp;
         dir->file_capacity *= 2;
     }
 
     dir->files[dir->file_count++] = filename;
+    return true;
 }
 
-void append_dir(Dir* parent, Dir* child) {
+bool append_dir(Dir* parent, Dir* child) {
     if (parent->dir_count >= parent->dir_capacity) {
         Dir** tmp = realloc(parent->dirs, sizeof(Dir*) * parent->dir_capacity * 2);
-        if (tmp == NULL) { /* TODO: handle that */ }
+        if (tmp == NULL) {
+            return false;
+        }
         parent->dirs = tmp;
         parent->dir_capacity *= 2;
     }
 
     parent->dirs[parent->dir_count++] = child;
+    return true;
 }
 
 /* It expects the path to be dynamically allocated. */
@@ -133,6 +139,7 @@ Dir* traverse_tree(char* path) {
 
         bool is_dir;
         if (!fs_entry_is_dir(new_path, &is_dir)) {
+            fprintf(stderr, "Some error happened.\n");
             return NULL;
         }
 
@@ -144,9 +151,15 @@ Dir* traverse_tree(char* path) {
 
             fs_entry_is_hidden(name, &child->is_hidden);
             fs_entry_is_system_dir(name, &child->is_system);
-            append_dir(root, child);
+            if (!append_dir(root, child)) {
+                fprintf(stderr, "Not enough storage.\n");
+                return NULL;
+            }
         } else {
-            append_file(root, new_path);
+            if (!append_file(root, new_path)) {
+                fprintf(stderr, "Not enough storage.\n");
+                return NULL;
+            }
         }
 
         fs_next_entry(fs_dir, &at_end);
