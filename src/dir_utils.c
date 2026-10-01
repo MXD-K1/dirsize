@@ -212,12 +212,12 @@ size_t get_dir_dir_count(const Dir* dir) {
     return dir->dir_count;
 }
 
-char** get_dir_files(const Dir* dir) {
-    return dir->files;
+char* get_dir_file(const Dir* dir, const int index) {
+    return dir->files[index];
 }
 
-Dir** get_dir_dirs(const Dir* dir) {
-    return dir->dirs;
+Dir* get_dir_dir(const Dir* dir, const int index) {
+    return dir->dirs[index];
 }
 
 bool is_dir_hidden(const Dir* dir) {

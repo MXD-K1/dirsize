@@ -41,7 +41,7 @@ void print_info(Dir* root, const Options opts) {
         if (opts.max_depth > 0) {
             Options new_opts = opts;
             new_opts.max_depth -= 1;
-            print_info(get_dir_dirs(root)[i], new_opts);
+            print_info(get_dir_dir(root, i), new_opts);
         }
     }
 }
