@@ -5,7 +5,6 @@
 
 typedef struct FS_Dir FS_Dir;
 
-FS_Dir* create_fs_dir(void);
 bool fs_open_dir(const char* path, FS_Dir** fs_dir);
 void fs_close_dir(FS_Dir* dir);
 void fs_next_entry(FS_Dir* dir, bool* at_end);

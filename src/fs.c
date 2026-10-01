@@ -20,7 +20,7 @@ struct FS_Dir {
 
 #include "fs.h"
 
-FS_Dir* create_fs_dir(void) {
+static FS_Dir* create_fs_dir(void) {
     FS_Dir* fs_dir = malloc(sizeof(FS_Dir));
     if (fs_dir == NULL) {
         return NULL;
@@ -104,11 +104,19 @@ void fs_next_entry(FS_Dir* dir, bool* at_end) {
 
 #ifdef _WIN32
 void fs_close_dir(FS_Dir* dir) {
+    if (dir == NULL) {
+        return;
+    }
+
     FindClose(dir->handle);
     free(dir);
 }
 #else
 void fs_close_dir(FS_Dir* dir) {
+    if (dir == NULL) {
+        return;
+    }
+
     closedir(dir->handle);
     free(dir);
 }
