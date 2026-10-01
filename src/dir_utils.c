@@ -122,6 +122,7 @@ Dir* traverse_tree(char* path) {
         fprintf(stderr, "Couldn't open directory '%s'\n", root->path);
         fs_close_dir(fs_dir);
         free_dir(root);
+        free(path);
         return NULL;
     }
 

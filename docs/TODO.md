@@ -37,9 +37,9 @@
 - [ ] Test on Linux
 - [ ] Test on Windows
 - [ ] Add CI
-- [ ] Write build instructions
-- [ ] Write usage documentation
-- [ ] Add examples
+- [x] Write build instructions
+- [x] Write usage documentation
+- [x] Add examples
 - [ ] Add a changelog
 - [ ] Prepare release binaries
 - [ ] Tag v1.0.0
@@ -62,6 +62,6 @@ The project is considered finished when:
 - [ ] Linux build works
 - [ ] Windows build works
 - [ ] CI passes
-- [ ] README explains how to build and use it
+- [x] README explains how to build and use it
 - [ ] v1.0.0 is tagged
 - [ ] A GitHub release is published

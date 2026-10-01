@@ -23,6 +23,8 @@ $ ./dirsize ~/Downloads
 1.0 GB   ~/Downloads/Other
 ```
 
+> Tip: run `./dirsize -h` in order to see all available options.
+
 ## Building
 
 to build this project, simply run:
