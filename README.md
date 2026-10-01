@@ -13,7 +13,7 @@ This is **not** intended to become a full replacement for tools such as `du`.
 ## Example
 
 ```text
-$ dirsize ~/Downloads
+$ ./dirsize ~/Downloads
 
 18.7 GB  ~/Downloads
 7.2 GB   ~/Downloads/Software
@@ -25,7 +25,10 @@ $ dirsize ~/Downloads
 
 ## Building
 
-Build instructions will be added once the project structure and build system are established.
+to build this project, simply run:
+```shell
+make dirsize
+```
 
 ## Development
 

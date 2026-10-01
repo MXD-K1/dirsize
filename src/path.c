@@ -10,7 +10,7 @@ char PATH_SEP = '/';
 #endif
 
 char* normalize_path(const char* path) {
-    const int len = strlen(path);
+    const int len = (int) strlen(path);
     char* new_path = malloc(len + 1);
     if (new_path == NULL) exit(1);
 

@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -10,11 +9,12 @@
 #endif
 
 struct FS_Dir {
-    char* name;
 #ifdef _WIN32
     HANDLE handle;
+    WIN32_FIND_DATA data;
 #else
     DIR* handle;
+    struct dirent data;
 #endif
 };
 
@@ -50,8 +50,8 @@ bool fs_open_dir(const char* path, FS_Dir** fs_dir) {
         return false;
     }
 
-    temp_dir->name = data.cFileName;
     temp_dir->handle = handle;
+    temp_dir->data = data;
     *fs_dir = temp_dir;
 
     return true;
@@ -75,8 +75,8 @@ bool fs_open_dir(const char* path, FS_Dir** fs_dir) {
         return false;
     }
 
-    temp_dir->name = dirent->d_name;
     temp_dir->handle = dir;
+    temp_dir->data = *dirent;
     *fs_dir = temp_dir;
 
     return true;
@@ -86,8 +86,14 @@ bool fs_open_dir(const char* path, FS_Dir** fs_dir) {
 #ifdef _WIN32
 void fs_next_entry(FS_Dir* dir, bool* at_end) {
     WIN32_FIND_DATA data;
-    *at_end = FindNextFile(dir->handle, &data);
-    dir->name = data.cFileName;
+    if (!FindNextFile(dir->handle, &data)) {
+        if (GetLastError() == ERROR_NO_MORE_FILES) {
+            *at_end = true;
+        } else {
+            *at_end = false;
+        }
+    }
+    dir->data = data;
 }
 #else
 void fs_next_entry(FS_Dir* dir, bool* at_end) {
@@ -97,7 +103,7 @@ void fs_next_entry(FS_Dir* dir, bool* at_end) {
         return;
     }
 
-    dir->name = dirent->d_name;
+    dir->data = *dirent;
     *at_end = false;
 }
 #endif
@@ -129,11 +135,7 @@ bool fs_entry_is_dir(const char* path, bool* is_dir) {
         return false;
     }
 
-    if (attrs & FILE_ATTRIBUTE_DIRECTORY) {
-        *is_dir = true;
-    } else {
-        *is_dir = false;
-    }
+    *is_dir = attrs & FILE_ATTRIBUTE_DIRECTORY;
     return true;
 }
 #else
@@ -155,11 +157,7 @@ bool fs_entry_is_file(const char* path, bool* is_file) {
         return false;
     }
 
-    if (attrs & FILE_ATTRIBUTE_DIRECTORY) {
-        *is_file = false;
-    } else {
-        *is_file = true;
-    }
+    *is_file = !(attrs & FILE_ATTRIBUTE_DIRECTORY);
     return true;
 }
 #else
@@ -182,7 +180,6 @@ bool fs_entry_is_hidden(const char* path, bool* is_hidden) {
     }
 
     *is_hidden = attrs & FILE_ATTRIBUTE_HIDDEN;
-
     return true;
 }
 #else
@@ -209,9 +206,15 @@ bool fs_entry_is_system_dir(const char* path, bool* is_system) {
 }
 #endif
 
+#ifdef _WIN32
 char* fs_get_entry_name(const FS_Dir* entry) {
-    return entry->name;
+    return (char*) entry->data.cFileName;
 }
+#else
+char* fs_get_entry_name(const FS_Dir* entry) {
+    return (char*) entry->data.d_name;
+}
+#endif
 
 #ifdef _WIN32
 bool fs_get_file_size(const char* file_path, size_t* size) {
