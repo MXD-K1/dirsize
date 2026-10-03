@@ -1,5 +1,5 @@
 CC := gcc
-CFlags := -std=c17
+CFlags := -std=c17 -Iinclude
 LDFlags := -lm
 DebugFlags := -g -fsanitize=address,undefined,leak -fno-omit-frame-pointer
 
@@ -7,6 +7,8 @@ SOURCES = main.c dir_utils.c path.c fs.c output.c cli.c
 
 DEBUG_OBJECTS = $(SOURCES:%.c=build/debug/%.o)
 RELEASE_OBJECTS = $(SOURCES:%.c=build/release/%.o)
+
+TESTS = path
 
 all: dirsize
 
@@ -25,6 +27,13 @@ build/release/%.o: src/%.c
 build/debug/%.o: src/%.c
 	mkdir -p build/debug
 	$(CC) $(CFlags) $(DebugFlags) $< -c -o $@
+
+build/tests/test_%: tests/test_%.c src/%.c tests/helpers.c
+	mkdir -p build/tests
+	$(CC) $(CFlags) $^ $(LDFlags) -o $@
+
+test: $(TESTS:%=build/tests/test_%)
+	./$<
 
 debug:
 	LSAN_OPTIONS=detect_leaks=0 gdb build/debug/test-dirsize
