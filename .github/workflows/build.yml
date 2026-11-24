@@ -26,6 +26,7 @@ jobs:
 
       - name: Check Toolchain
         run: |-
+          alias make=mingw32-make
           gcc --version
           make --version
 
