@@ -1,0 +1,50 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: msys {0}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-make
+
+      - name: Check Toolchain
+        run: |-
+          gcc --version
+          make --version
+
+      - name: Build Executable
+        run: make
+
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Toolchain
+        run: sudo apt-get update && sudo apt-get install -y make gcc
+
+      - name: Check Toolchain
+        run: |-
+          gcc --version
+          make --version
+
+      - name: Build Executable
+        run: make
