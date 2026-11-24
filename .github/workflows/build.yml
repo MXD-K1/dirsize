@@ -26,12 +26,11 @@ jobs:
 
       - name: Check Toolchain
         run: |-
-          alias make=mingw32-make
+          mingw32-make --version
           gcc --version
-          make --version
 
       - name: Build Executable
-        run: make
+        run: mingw32-make
 
   build-linux:
     runs-on: ubuntu-latest

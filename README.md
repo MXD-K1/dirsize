@@ -1,5 +1,7 @@
 # dirsize
 
+[![Build](https://github.com/MXD-K1/dirsize/actions/workflows/build.yml/badge.svg)](https://github.com/MXD-K1/dirsize/actions/workflows/build.yml)
+
 A small, cross-platform disk usage analyzer written in C17.
 
 `dirsize` recursively walks a directory tree, calculates the space used by files and directories, and presents the results in a readable form.
